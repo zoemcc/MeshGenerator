@@ -65,30 +65,17 @@ radialGrid axisResolution = Mesh verts tris
                 fromList [Triangle (S.length verts) r1 r0 | (r0, r1) <- firstRowPairs axisResolution] --center tris
         verts = (fromList [Vertex (radius * cos theta) 0.0 (radius * sin theta) | radius <- radiusRange, theta <- thetaRange]) |> Vertex 0.0 0.0 0.0
 
-radialGridMultipleMesh :: Int -> [Mesh Double]
-radialGridMultipleMesh axisResolution = meshList
-    where 
-        meshList :: [Mesh Double]
-        meshList = map (\tris -> Mesh verts tris) trisList
-
-        radiusRange :: [Double]
-        radiusRange = map (\t -> t / (fromIntegral (axisResolution - 1))) (P.take axisResolution [1.0, 2.0 ..])
-
-        thetaRange :: [Double]
-        thetaRange = map (\t -> 2.0 * pi * t / (fromIntegral (axisResolution - 1))) (P.take axisResolution [0.0, 1.0 ..])
-
-        trisLong = (fromList $ P.concatMap takeOffSetGiveTris $ allPairs axisResolution) >< --all but center
-                   fromList [Triangle (S.length verts) r1 r0 | (r0, r1) <- firstRowPairs axisResolution] --center tris
-
-        trisList = recursiveSplitAt 65534 trisLong
-
-        verts = (fromList [Vertex (radius * cos theta) 0.0 (radius * sin theta) | radius <- radiusRange, theta <- thetaRange]) |> Vertex 0.0 0.0 0.0
-
 recursiveSplitAt :: Int -> Seq a -> [Seq a]
 recursiveSplitAt splitAt inSeq | S.length inSeq <= splitAt = [inSeq]
 recursiveSplitAt splitAt inSeq | otherwise = firstSeq : recursiveSplitAt splitAt secSeq
     where
         (firstSeq, secSeq) = S.splitAt splitAt inSeq
+
+splitMeshAt :: Int -> Mesh a -> [Mesh a]
+splitMeshAt splitAt (Mesh verts trisLong) = meshList
+    where
+        meshList = map (\tris -> Mesh verts tris) trisList
+        trisList = recursiveSplitAt splitAt trisLong
 
 takeOffSetGiveTris :: ((Int, Int), (Int, Int)) -> [Triangle]
 takeOffSetGiveTris ((r0, r1), (c0, c1)) = [(Triangle (r0 + c0) (r1 + c0) (r0 + c1)), (Triangle (r0 + c1) (r1 + c0) (r1 + c1))]
@@ -109,16 +96,30 @@ pairs _         = []
 meshToObj :: (Show a) => Mesh a -> String -> IO ()
 meshToObj mesh filename = writeFile filename (show mesh ++ "\n")
 
+meshVertLength :: Mesh a -> Int
+meshVertLength (Mesh verts tris) = S.length verts
+
+meshTrisLength :: Mesh a -> Int
+meshTrisLength (Mesh verts tris) = S.length tris
+
 main :: IO ()
 main = do 
-    meshToObj testSquare "testSquare.obj"
-    print testSquare
-    print $ squareGrid 3
-    print $ radialGrid 4
-    let meshList = radialGridMultipleMesh 250 :: [Mesh Double]
-    print $ P.length meshList
-    --meshToObj (squareGrid 225) "squareGrid225.obj"
-    P.mapM_ (\(index, mesh) -> meshToObj mesh ("radialGrid250_" ++ show index ++ ".obj")) (P.zip [0, 1..] meshList)
-    --meshToObj (radialGrid 250) "radialGrid250.obj"
-    --print (pairs [1,2,3])
+    --meshToObj testSquare "testSquare.obj"
+    --print testSquare
+    --print $ squareGrid 3
+    --print $ radialGrid 4
+
+    let maxTriNum = 65534
+
+    let meshListRadial = splitMeshAt maxTriNum (radialGrid 250) :: [Mesh Double]
+    print $ P.length meshListRadial
+    print $ "Radial number of vertices: "  ++ show (P.map meshVertLength meshListRadial)
+    print $ "Radial number of triangles: " ++ show (P.map meshTrisLength meshListRadial)
+    P.mapM_ (\(index, mesh) -> meshToObj mesh ("radialGrid250_" ++ show index ++ ".obj")) (P.zip [0, 1..] meshListRadial)
+
+    let meshListSquare = splitMeshAt maxTriNum (squareGrid 500) :: [Mesh Double]
+    print $ P.length meshListSquare
+    print $ "Square number of vertices: "  ++ show (P.map meshVertLength meshListSquare)
+    print $ "Square number of triangles: " ++ show (P.map meshTrisLength meshListSquare)
+    P.mapM_ (\(index, mesh) -> meshToObj mesh ("squareGrid500_" ++ show index ++ ".obj")) (P.zip [0, 1..] meshListSquare)
 
