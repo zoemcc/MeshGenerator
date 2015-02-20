@@ -12,13 +12,19 @@ import Linear
 import Types
 
 marchingCubesOneCell :: (Ord a, Floating a) => a -> GridCell a -> Seq (IndependentTriangle a)
-marchingCubesOneCell isoLevel (GridCell cellVertices cellValues)  = P.undefined
+marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = gridTris
     where 
+        indicesToOr :: [Int]
+        indicesToOr = [2 ^ i | i <- [0..7], (cellValues ! i < isoLevel)]
+
         cubeIndex :: Int
         cubeIndex = P.foldr (.|.) 0 indicesToOr
 
         edgeTableLookup :: Int
         edgeTableLookup = edgeTable ! cubeIndex
+
+        triTableSection :: Vector Int
+        triTableSection = triTable ! cubeIndex
 
         {-
         if et==0: return 0
@@ -36,22 +42,28 @@ marchingCubesOneCell isoLevel (GridCell cellVertices cellValues)  = P.undefined
         if et&2048: vertexList[11] = vi(position[3],position[7],value[3],value[7])
         -}
 
-        vertexPositionsIndices = Data.Vector.fromList 
-                                  [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6),
+        vertexPositionsIndices = Data.Vector.fromList [
+                                  (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6),
                                   (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)] 
                                   :: Vector (Int, Int)
 
-        --vertexList = [vertexInterpolation (vertexPositionsIndices ! i) | 
-        verticesToInterpolate = [ i | i <- [0..11], (testBit edgeTableLookup i)] :: [Int]
-        
-        vertexPositions = Data.Vector.fromList [vertexInterpolation  | i <- [0..7], (cellValues ! i < isoLevel)]
+        gridTris = S.fromList [IndependentTriangle v0 v1 v2 | i <- [0, 3 .. 12], (triTableSection ! i /= -1), 
+                                                              let v0 = (vertexVector ! i), let v1 = (vertexVector ! (i + 1)),
+                                                              let v2 = (vertexVector ! (i + 2))]
 
-        indicesToOr :: [Int]
-        indicesToOr = [2 ^ i | i <- [0..7], (cellValues ! i < isoLevel)]
---marchingCubesOneCell cell = 
+        -- no edgetable optimization right now to only interp the edges that need it
+        vertexVector = Data.Vector.fromList [interpedVertex | i <- [0..11], let (index0, index1) = vertexPositionsIndices ! i,
+                                                              let vert0 = cellVertices ! index0, let vert1 = cellVertices ! index1,
+                                                              let value0 = cellValues ! index0, let value1 = cellValues ! index1,
+                                                              let interpedVertex = vertexInterpolation vert0 vert1 value0 value1]
+
+        -- not currently being used by the vertexVector
+        verticesToInterpolate = [ i | i <- [0..11], (testBit edgeTableLookup i)] :: [Int]
+
 
 vertexInterpolation :: Floating a => V3 a -> V3 a -> a -> a -> V3 a
-vertexInterpolation = P.undefined
+vertexInterpolation vert0 vert1 value0 value1 = lerp 0.5 vert0 vert1 -- just halfway interp for now, will improve this later
+
 
 
 edgeTable = Data.Vector.fromList 
