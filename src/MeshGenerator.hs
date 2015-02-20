@@ -1,36 +1,13 @@
+module MeshGenerator  where
+
 import Data.Sequence as S
 import Data.List
 import Data.Foldable
 import System.IO
 import Prelude as P
 import qualified Data.Text as T
+import Types
 
-data Vertex a = Vertex a a a
-    deriving Read
-instance Show a => Show (Vertex a) where
-    show  = T.unpack . vertToText
-
-vertToText :: (Show a) => Vertex a -> T.Text
-vertToText (Vertex vx vy vz) = T.intercalate (T.singleton ' ') 
-                               [T.singleton 'v', T.pack $ show vx, T.pack $ show vy, T.pack $ show vz]
-
-data Triangle = Triangle Int Int Int
-    deriving Read
-instance Show Triangle where
-    show  = T.unpack . triToText
-
-triToText :: Triangle -> T.Text
-triToText (Triangle v0 v1 v2) = T.intercalate (T.singleton ' ') 
-                               [T.singleton 'f', T.pack $ show v0, T.pack $ show v1, T.pack $ show v2]
-
-data Mesh a = Mesh (Seq (Vertex a)) (Seq Triangle)
-    deriving (Read)
-instance Show a => Show (Mesh a) where
-    show = T.unpack . meshToText
-
-meshToText :: (Show a) => Mesh a -> T.Text
-meshToText (Mesh verts tris) = T.intercalate (T.pack "\n") 
-                               (toList (fmap vertToText verts >< fmap triToText tris))
 
 testVerts :: Seq (Vertex Double)
 testVerts = fromList [Vertex 0.0 0.0 0.0, Vertex 0.0 0.0 1.0, Vertex 1.0 0.0 1.0, Vertex 1.0 0.0 0.0]
@@ -101,25 +78,4 @@ meshVertLength (Mesh verts tris) = S.length verts
 
 meshTrisLength :: Mesh a -> Int
 meshTrisLength (Mesh verts tris) = S.length tris
-
-main :: IO ()
-main = do 
-    --meshToObj testSquare "testSquare.obj"
-    --print testSquare
-    --print $ squareGrid 3
-    --print $ radialGrid 4
-
-    let maxTriNum = 65534
-
-    let meshListRadial = splitMeshAt maxTriNum (radialGrid 250) :: [Mesh Double]
-    print $ P.length meshListRadial
-    print $ "Radial number of vertices: "  ++ show (P.map meshVertLength meshListRadial)
-    print $ "Radial number of triangles: " ++ show (P.map meshTrisLength meshListRadial)
-    P.mapM_ (\(index, mesh) -> meshToObj mesh ("radialGrid250_" ++ show index ++ ".obj")) (P.zip [0, 1..] meshListRadial)
-
-    let meshListSquare = splitMeshAt maxTriNum (squareGrid 500) :: [Mesh Double]
-    print $ P.length meshListSquare
-    print $ "Square number of vertices: "  ++ show (P.map meshVertLength meshListSquare)
-    print $ "Square number of triangles: " ++ show (P.map meshTrisLength meshListSquare)
-    P.mapM_ (\(index, mesh) -> meshToObj mesh ("squareGrid500_" ++ show index ++ ".obj")) (P.zip [0, 1..] meshListSquare)
 

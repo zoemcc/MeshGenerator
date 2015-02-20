@@ -2,8 +2,8 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                MeshGenerator
-version:             0.1.0.0
-synopsis:            An executable for making mesh objects in regular grids.
+version:             0.1.0.1
+synopsis:            An executable and library for making mesh objects in regular grids.
 -- description:         
 license:             BSD3
 license-file:        LICENSE
@@ -15,13 +15,32 @@ build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
 
+
+--library 
+    --exposed-modules:
+      --Types
+      --MarchingCubes
+
+    --build-depends: 
+      --base >= 4 && < 5
+
+    --default-language: Haskell2010
+
+    --ghc-options: -O2 -Wall -fwarn-tabs
+
 executable MeshGenerator
   -- main-is:             
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7, 
                        containers >=0.5 && <0.6,
-                       text >= 1.2.0.0
-  -- hs-source-dirs:      
+                       text >= 1.2.0.0,
+                       vector >= 0.10,
+                       linear >= 1.15
+                       --MeshGenerator
+
+  hs-source-dirs:      src
+
   default-language:    Haskell2010
-  main-is:             MeshGenerator.hs
+  main-is:             Main.hs
+
