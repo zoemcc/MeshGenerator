@@ -11,8 +11,8 @@ import qualified Data.Text as T
 import Linear
 import Types
 
-marchingCubesOneCell :: (Ord a, Floating a) => a -> GridCell a -> Seq (IndependentTriangle a)
-marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = gridTris
+marchingCubesOneCell :: (Ord a, Floating a) => a -> GridCell a -> IndependentTriangleMesh a
+marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = IndependentTriangleMesh gridTris
     where 
         indicesToOr :: [Int]
         indicesToOr = [2 ^ i | i <- [0..7], (cellValues ! i < isoLevel)]
@@ -47,14 +47,16 @@ marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = gridTris
                                   (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)] 
                                   :: Vector (Int, Int)
 
-        gridTris = S.fromList [IndependentTriangle v0 v1 v2 | i <- [0, 3 .. 12], (triTableSection ! i /= -1), 
-                                                              let v0 = (vertexVector ! i), let v1 = (vertexVector ! (i + 1)),
+        gridTris = S.fromList [IndependentTriangle v0 v1 v2 | i <- [0, 3 .. 12], 
+                                                              ((triTableSection ! i) /= -1), 
+                                                              let v0 = (vertexVector ! i), 
+                                                              let v1 = (vertexVector ! (i + 1)),
                                                               let v2 = (vertexVector ! (i + 2))]
 
         -- no edgetable optimization right now to only interp the edges that need it
         vertexVector = Data.Vector.fromList [interpedVertex | i <- [0..11], let (index0, index1) = vertexPositionsIndices ! i,
-                                                              let vert0 = cellVertices ! index0, let vert1 = cellVertices ! index1,
-                                                              let value0 = cellValues ! index0, let value1 = cellValues ! index1,
+                                                              let vert0 = cellVertices ! index0, let value0 = cellValues ! index0,
+                                                              let vert1 = cellVertices ! index1, let value1 = cellValues ! index1,
                                                               let interpedVertex = vertexInterpolation vert0 vert1 value0 value1]
 
         -- not currently being used by the vertexVector

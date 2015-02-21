@@ -1,0 +1,7 @@
+Make MarchingCubes work with the correct cube indices
+Make MarchingCubes work on a grid, not just one cell
+Evaluate an implicit surface on a grid
+Finish Mandelbulb implicit function
+Implement vertex interpolation for MarchingCubes and optimization for only used edges
+Tests!
+
