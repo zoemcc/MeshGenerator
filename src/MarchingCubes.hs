@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 module MarchingCubes where
 
 import Data.Sequence as S
@@ -10,6 +11,30 @@ import Prelude as P
 import qualified Data.Text as T
 import Linear
 import Types
+
+marchingCubesGrid :: (Ord a, Floating a, Integral b) => (V3 a -> a) -> a -> b -> V3 a -> V3 a -> IndependentTriangleMesh a
+marchingCubesGrid function isoLevel resolution corner1 corner2 = foldMap (marchingCubesOneCell isoLevel) grid
+    where 
+        grid = generateGrid function resolution corner1 corner2
+
+
+generateGrid :: (Ord a, Floating a, Integral b) => (V3 a -> a) -> b -> V3 a -> V3 a -> Seq (GridCell a)
+generateGrid function resolution corner1 corner2 = P.undefined
+    where
+        minCorner = elementWise min corner1 corner2
+        maxCorner = elementWise max corner1 corner2
+        --times = [(time :: Double) / (fromIntegral resolution) | time <- [0..resolution]]
+        allPoints = []
+        
+
+elementWise :: forall a b . (Ord a, Floating a) => (a -> a -> b) -> V3 a -> V3 a -> V3 b
+elementWise function firstInput secondInput = extractResult maybeResult
+    where
+        maybeResult = toV3fromList (P.zipWith function (Data.Foldable.toList firstInput) (Data.Foldable.toList secondInput)) -- this is a terrible, terrible hack
+        extractResult (Just vector) = vector
+        extractResult (Nothing) = P.undefined -- should not ever be called (since both v and w have the right shape
+        
+
 
 marchingCubesOneCell :: (Ord a, Floating a) => a -> GridCell a -> IndependentTriangleMesh a
 marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = IndependentTriangleMesh gridTris

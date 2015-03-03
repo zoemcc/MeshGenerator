@@ -80,4 +80,8 @@ data TetMesh a = TetMesh (Seq (Vertex a)) (Seq Tetrahedron)
 type ImplicitSurface a = V3 a -> a
 
 
+toV3fromList :: [a] -> Maybe (V3 a)
+toV3fromList (x:y:z:[]) = Just (V3 x y z)
+toV3fromList _          = Nothing
+
 
