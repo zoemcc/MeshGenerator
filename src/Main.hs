@@ -6,6 +6,7 @@ import Data.Foldable
 import System.IO
 import Prelude as P
 import qualified Data.Text as T
+import Control.Lens
 import Types
 import MeshGenerator
 import Linear
@@ -14,6 +15,19 @@ import MarchingCubes
 
 sphere :: V3 Double -> Double
 sphere v = norm v - 1.0
+
+
+boxAxis :: Double -> V3 Double -> Double
+boxAxis lim v | maxAxis v > lim && minAxis v < (-lim) = max (maxAxis v - lim) (-(minAxis v + lim))
+boxAxis lim v | minAxis v < (-lim) = (-(minAxis v + lim))
+boxAxis lim v | maxAxis v > lim = maxAxis v - lim
+boxAxis lim v | otherwise = max (maxAxis v - lim) (-(minAxis v + lim))
+
+minAxis :: V3 Double -> Double
+minAxis v = min (min (v ^._x) (v ^._y)) (v ^._z)
+
+maxAxis :: V3 Double -> Double
+maxAxis v = max (max (v ^._x) (v ^._y)) (v ^._z)
 
 main :: IO ()
 main = do 
@@ -43,4 +57,8 @@ main = do
     let sphereIndepMesh = marchingCubesGrid sphere 0.0 20 minCorner maxCorner
     let sphereMesh = independentTriangleMeshToMeshUnCompressed sphereIndepMesh
     meshToObj sphereMesh "sphereMesh.obj"
+
+    let boxIndepMesh = marchingCubesGrid (boxAxis 0.8) 0.0 20 minCorner maxCorner
+    let boxMesh = independentTriangleMeshToMeshUnCompressed boxIndepMesh
+    meshToObj boxMesh "boxMesh.obj"
 
