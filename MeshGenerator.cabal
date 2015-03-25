@@ -33,6 +33,7 @@ executable MeshGenerator
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7, 
+                       array,
                        containers >=0.5 && <0.6,
                        text >= 1.2.0.0,
                        vector >= 0.10,

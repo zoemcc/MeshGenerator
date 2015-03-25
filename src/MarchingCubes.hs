@@ -6,28 +6,64 @@ import Data.List
 import Data.Foldable
 import Data.Bits
 import Data.Vector
+import qualified Data.Array as A
 import System.IO
 import Prelude as P
 import qualified Data.Text as T
 import Linear
 import Types
+import Control.Lens
 
-marchingCubesGrid :: (Ord a, Floating a, Integral b) => (V3 a -> a) -> a -> b -> V3 a -> V3 a -> IndependentTriangleMesh a
+marchingCubesGrid :: (Ord a, Floating a, Num a) => (V3 a -> a) -> a -> Int -> V3 a -> V3 a -> IndependentTriangleMesh a
 marchingCubesGrid function isoLevel resolution corner1 corner2 = foldMap (marchingCubesOneCell isoLevel) grid
     where 
         grid = generateGrid function resolution corner1 corner2
 
 
-generateGrid :: (Ord a, Floating a, Integral b) => (V3 a -> a) -> b -> V3 a -> V3 a -> Seq (GridCell a)
-generateGrid function resolution corner1 corner2 = P.undefined
+generateGrid :: (Ord a, Floating a, Num a) => (V3 a -> a) -> Int -> V3 a -> V3 a -> Seq (GridCell a)
+generateGrid function resolution corner1 corner2 = S.fromList gridList
     where
         minCorner = elementWise min corner1 corner2
         maxCorner = elementWise max corner1 corner2
-        --times = [(time :: Double) / (fromIntegral resolution) | time <- [0..resolution]]
-        allPoints = []
+        indices = [0..resolution]
+        times = P.zip indices [(fromIntegral time) / (fromIntegral resolution) | time <- indices]
+        staggeredIndices = P.zip indices (P.tail indices)
+
+        gridList = [GridCell (Data.Vector.fromList 
+                              [allPoints A.! (i0, j0, k0),
+                               allPoints A.! (i0, j1, k0),
+                               allPoints A.! (i1, j1, k0),
+                               allPoints A.! (i1, j0, k0),
+                               allPoints A.! (i0, j0, k1),
+                               allPoints A.! (i0, j1, k1),
+                               allPoints A.! (i1, j1, k1),
+                               allPoints A.! (i1, j0, k1)])
+                             (Data.Vector.fromList 
+                              [allPointsLevel A.! (i0, j0, k0),
+                               allPointsLevel A.! (i0, j1, k0),
+                               allPointsLevel A.! (i1, j1, k0),
+                               allPointsLevel A.! (i1, j0, k0),
+                               allPointsLevel A.! (i0, j0, k1),
+                               allPointsLevel A.! (i0, j1, k1),
+                               allPointsLevel A.! (i1, j1, k1),
+                               allPointsLevel A.! (i1, j0, k1)])
+                    | (i0, i1) <- staggeredIndices, 
+                      (j0, j1) <- staggeredIndices,
+                      (k0, k1) <- staggeredIndices]
+
+        allPointsList = [((i, j, k), V3 
+                         ((minCorner ^._x) * (1 - timex) + (maxCorner ^._x) * timex)
+                         ((minCorner ^._y) * (1 - timey) + (maxCorner ^._y) * timey)
+                         ((minCorner ^._z) * (1 - timez) + (maxCorner ^._z) * timez))
+                         | (i, timex) <- times, (j, timey) <- times, (k, timez) <- times
+                        ]
+        allPoints = A.array ((0, 0, 0), (resolution, resolution, resolution)) allPointsList
+
+        allPointsLevelList = P.map (\(ix, v) -> (ix, function v)) allPointsList
+        allPointsLevel = A.array ((0, 0, 0), (resolution, resolution, resolution)) allPointsLevelList
         
 
-elementWise :: forall a b . (Ord a, Floating a) => (a -> a -> b) -> V3 a -> V3 a -> V3 b
+elementWise :: (Ord a, Floating a) => (a -> a -> b) -> V3 a -> V3 a -> V3 b
 elementWise function firstInput secondInput = extractResult maybeResult
     where
         maybeResult = toV3fromList (P.zipWith function (Data.Foldable.toList firstInput) (Data.Foldable.toList secondInput)) -- this is a terrible, terrible hack
@@ -74,9 +110,9 @@ marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = IndependentTr
 
         gridTris = S.fromList [IndependentTriangle v0 v1 v2 | i <- [0, 3 .. 12], 
                                                               ((triTableSection ! i) /= -1), 
-                                                              let v0 = (vertexVector ! i), 
-                                                              let v1 = (vertexVector ! (i + 1)),
-                                                              let v2 = (vertexVector ! (i + 2))]
+                                                              let v0 = (vertexVector ! (triTableSection ! i)), 
+                                                              let v1 = (vertexVector ! (triTableSection ! (i + 1))),
+                                                              let v2 = (vertexVector ! (triTableSection ! (i + 2)))]
 
         -- no edgetable optimization right now to only interp the edges that need it
         vertexVector = Data.Vector.fromList [interpedVertex | i <- [0..11], let (index0, index1) = vertexPositionsIndices ! i,

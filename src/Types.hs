@@ -39,7 +39,7 @@ data IndependentTriangle a = IndependentTriangle (V3 a) (V3 a) (V3 a)
 independentTriangleToSeqVertices :: IndependentTriangle a -> Seq (Vertex a)
 independentTriangleToSeqVertices (IndependentTriangle v0 v1 v2) = S.fromList (P.map linearToVert [v0, v1, v2])
 
-data GridCell a = GridCell (Vector (V3 a)) (Vector a)
+data GridCell a = GridCell (Vector (V3 a)) (Vector a) -- grid points and levels
     deriving (Read, Show)
 
 data IndependentTriangleMesh a = IndependentTriangleMesh (Seq (IndependentTriangle a))
