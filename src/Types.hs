@@ -59,7 +59,7 @@ independentTriangleMeshToMeshUnCompressed (IndependentTriangleMesh independentTr
         triangles = mapWithIndex triangleToUncompressedIndices independentTriangles
 
         triangleToUncompressedIndices :: Int -> IndependentTriangle a -> Triangle
-        triangleToUncompressedIndices index _ = Triangle (3 * index) (3 * index + 1) (3 * index + 2)
+        triangleToUncompressedIndices index _ = Triangle (3 * index + 1) (3 * index + 2) (3 * index + 3)
 
 data Mesh a = Mesh (Seq (Vertex a)) (Seq Triangle)
     deriving (Read)

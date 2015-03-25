@@ -31,22 +31,22 @@ generateGrid function resolution corner1 corner2 = S.fromList gridList
 
         gridList = [GridCell (Data.Vector.fromList 
                               [allPoints A.! (i0, j0, k0),
-                               allPoints A.! (i0, j1, k0),
-                               allPoints A.! (i1, j1, k0),
                                allPoints A.! (i1, j0, k0),
+                               allPoints A.! (i1, j1, k0),
+                               allPoints A.! (i0, j1, k0),
                                allPoints A.! (i0, j0, k1),
-                               allPoints A.! (i0, j1, k1),
+                               allPoints A.! (i1, j0, k1),
                                allPoints A.! (i1, j1, k1),
-                               allPoints A.! (i1, j0, k1)])
+                               allPoints A.! (i0, j1, k1)])
                              (Data.Vector.fromList 
                               [allPointsLevel A.! (i0, j0, k0),
-                               allPointsLevel A.! (i0, j1, k0),
-                               allPointsLevel A.! (i1, j1, k0),
                                allPointsLevel A.! (i1, j0, k0),
+                               allPointsLevel A.! (i1, j1, k0),
+                               allPointsLevel A.! (i0, j1, k0),
                                allPointsLevel A.! (i0, j0, k1),
-                               allPointsLevel A.! (i0, j1, k1),
+                               allPointsLevel A.! (i1, j0, k1),
                                allPointsLevel A.! (i1, j1, k1),
-                               allPointsLevel A.! (i1, j0, k1)])
+                               allPointsLevel A.! (i0, j1, k1)])
                     | (i0, i1) <- staggeredIndices, 
                       (j0, j1) <- staggeredIndices,
                       (k0, k1) <- staggeredIndices]
@@ -110,7 +110,7 @@ marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = IndependentTr
 
         gridTris = S.fromList [IndependentTriangle v0 v1 v2 | i <- [0, 3 .. 12], 
                                                               ((triTableSection ! i) /= -1), 
-                                                              let v0 = (vertexVector ! (triTableSection ! i)), 
+                                                              let v0 = (vertexVector ! (triTableSection ! (i)), 
                                                               let v1 = (vertexVector ! (triTableSection ! (i + 1))),
                                                               let v2 = (vertexVector ! (triTableSection ! (i + 2)))]
 

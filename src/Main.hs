@@ -54,11 +54,11 @@ main = do
 
     let minCorner = V3 (-1.5) (-1.5) (-1.5) :: V3 Double
     let maxCorner = V3   1.5    1.5    1.5  :: V3 Double
-    let sphereIndepMesh = marchingCubesGrid sphere 0.0 20 minCorner maxCorner
+    let sphereIndepMesh = marchingCubesGrid sphere 0.0 50 minCorner maxCorner
     let sphereMesh = independentTriangleMeshToMeshUnCompressed sphereIndepMesh
     meshToObj sphereMesh "sphereMesh.obj"
 
-    let boxIndepMesh = marchingCubesGrid (boxAxis 0.8) 0.0 20 minCorner maxCorner
+    let boxIndepMesh = marchingCubesGrid (boxAxis 0.8) 0.0 50 minCorner maxCorner
     let boxMesh = independentTriangleMeshToMeshUnCompressed boxIndepMesh
     meshToObj boxMesh "boxMesh.obj"
 
