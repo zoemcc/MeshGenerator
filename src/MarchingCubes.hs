@@ -110,7 +110,7 @@ marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = IndependentTr
 
         gridTris = S.fromList [IndependentTriangle v0 v1 v2 | i <- [0, 3 .. 12], 
                                                               ((triTableSection ! i) /= -1), 
-                                                              let v0 = (vertexVector ! (triTableSection ! (i)), 
+                                                              let v0 = (vertexVector ! (triTableSection ! (i + 0))), 
                                                               let v1 = (vertexVector ! (triTableSection ! (i + 1))),
                                                               let v2 = (vertexVector ! (triTableSection ! (i + 2)))]
 
@@ -118,14 +118,21 @@ marchingCubesOneCell isoLevel (GridCell cellVertices cellValues) = IndependentTr
         vertexVector = Data.Vector.fromList [interpedVertex | i <- [0..11], let (index0, index1) = vertexPositionsIndices ! i,
                                                               let vert0 = cellVertices ! index0, let value0 = cellValues ! index0,
                                                               let vert1 = cellVertices ! index1, let value1 = cellValues ! index1,
-                                                              let interpedVertex = vertexInterpolation vert0 vert1 value0 value1]
+                                                              let interpedVertex = vertexInterpolation vert0 vert1 value0 value1 isoLevel]
 
         -- not currently being used by the vertexVector
         verticesToInterpolate = [ i | i <- [0..11], (testBit edgeTableLookup i)] :: [Int]
 
 
-vertexInterpolation :: Floating a => V3 a -> V3 a -> a -> a -> V3 a
-vertexInterpolation vert0 vert1 value0 value1 = lerp 0.5 vert0 vert1 -- just halfway interp for now, will improve this later
+vertexInterpolation :: (Ord a, Floating a) => V3 a -> V3 a -> a -> a -> a -> V3 a
+vertexInterpolation vert0 vert1 value0 value1 level = lerp mu vert0 vert1 -- just halfway interp for now, will improve this later
+    where
+        --mu | abs (level - value0) < 0.0000001 = 0.0
+        --mu | abs (level - value1) < 0.0000001 = 1.0
+        --mu | abs (value0 - value1) < 0.0000001 = 0.0
+        --mu | otherwise = max (min ((level - value0) / (value1 - value0)) 1.0) 0.0
+        mu = max (min ((level - value0) / (value1 - value0)) 1.0) 0.0
+        --mu = 0.5
 
 
 
